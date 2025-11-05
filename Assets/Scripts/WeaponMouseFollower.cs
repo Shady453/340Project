@@ -18,6 +18,7 @@ public class WeaponMouseFollower : MonoBehaviour
     void Update()
     {
         UpdateWeaponRotation();
+        FlipWeapon();
         
         // flip weapon sprite if needed
     }
@@ -35,5 +36,22 @@ public class WeaponMouseFollower : MonoBehaviour
         
         // rotate object
         transform.rotation = Quaternion.Euler(0f, 0f, targetAngle);
+    }
+
+    private void FlipWeapon()
+    {
+        // If facing left (angle between 90 and 270), flip vertically
+        float currentZ = transform.eulerAngles.z;
+
+        if (currentZ > 90 && currentZ < 270)
+        {
+            // Flip sprite upside-down so it stays visually correct
+            transform.localScale = new Vector3(0.5f, -0.5f, 1);
+        }
+        else
+        {
+            // Normal orientation
+            transform.localScale = new Vector3(0.5f, 0.5f, 1);
+        }
     }
 }

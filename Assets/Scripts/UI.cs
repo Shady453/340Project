@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UI : MonoBehaviour
 {
@@ -10,8 +12,27 @@ public class UI : MonoBehaviour
     public CanvasGroup PauseCanvasGroup;
     public CanvasGroup SettingsCanvasGroup;
     public CanvasGroup GameoverCanvasGroup;
+
+    public TMP_Text AliveCount;
+    public TMP_Text SpawnedThisRound;
+    public TMP_Text ToSpawnThisRound;
     
     private List<CanvasGroup> canvasGroups;
+
+    public void ShowAliveCount(int value)
+    {
+        AliveCount.text = value.ToString();
+    }
+    
+    public void ShowSpawnedThisRound(int value)
+    {
+        SpawnedThisRound.text = value.ToString();
+    }
+    
+    public void ShowToSpawnThisRound(int value)
+    {
+        ToSpawnThisRound.text = value.ToString();
+    }
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
