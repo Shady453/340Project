@@ -28,7 +28,7 @@ public class Move2D : MonoBehaviour
     private void Awake()
     {
         rb2D = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>(); 
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         // Estimate player size from its Renderer or Collider so we keep the whole thing inside the bounds.
         // Prefer Collider2D if present (usually aligns with gameplay size).
@@ -44,7 +44,7 @@ public class Move2D : MonoBehaviour
         }
 
         RecomputePlayableBounds();
-    }
+}
 
     private void OnValidate()
     {
@@ -66,12 +66,12 @@ public class Move2D : MonoBehaviour
             else if (moveInput.x > 0f) spriteRenderer.flipX = false;
         }
 
-        if (!UsePhysics())
-        {
-            Vector3 target = transform.position + (Vector3)(moveInput * speed * Time.deltaTime);
-            if (hasBounds) target = ClampToPlayable(target);
-            transform.position = target;
-        }
+        // if (!UsePhysics())
+        // {
+        //     Vector3 target = transform.position + (Vector3)(moveInput * speed * Time.deltaTime);
+        //     if (hasBounds) target = ClampToPlayable(target);
+        //     transform.position = target;
+        // }
     }
 
     private void FixedUpdate()
@@ -79,7 +79,7 @@ public class Move2D : MonoBehaviour
         if (UsePhysics())
         {
             Vector2 target = (rb2D.position + moveInput * speed * Time.fixedDeltaTime);
-            if (hasBounds) target = (Vector2)ClampToPlayable(target);
+            // if (hasBounds) target = (Vector2)ClampToPlayable(target);
             rb2D.MovePosition(target);
         }
     }
