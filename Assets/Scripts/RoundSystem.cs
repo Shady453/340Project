@@ -129,21 +129,24 @@ public class RoundSystem : MonoBehaviour
         if (enemyPrefab == null || spawnPoints == null || spawnPoints.Count == 0) return;
 
         Transform sp = spawnPoints[Random.Range(0, spawnPoints.Count)];
-        GameObject e = Instantiate(enemyPrefab, sp.position, Quaternion.identity);
+        Vector3 spawnPos = sp.position;
 
-        // Scale difficulty on the spawned enemy
-        var enemy = e.GetComponent<DummyEnemy>();
-        if (enemy != null)
+        // Snap spawn position to nearest NavMesh position
+        if (UnityEngine.AI.NavMesh.SamplePosition(spawnPos, out UnityEngine.AI.NavMeshHit hit, 1.0f, UnityEngine.AI.NavMesh.AllAreas))
         {
-            enemy.health = Mathf.Round(enemy.health * healthScale);
-
-            // Optional: if your enemy has a mover, scale it too
-            var mover = e.GetComponent<ZombieAiMove>();  // or whatever your mover script is
-            if (mover != null)
-            {
-                mover.speed *= speedScale;               // make sure your mover exposes "speed"
-            }
+            spawnPos = hit.position;
         }
+        else
+        {
+            Debug.LogWarning($"SpawnEnemy: No NavMesh near spawn point {sp.name}");
+            return;
+        }
+
+        GameObject e = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+
+        var agent = e.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null && !agent.isOnNavMesh)
+            agent.Warp(spawnPos);
     }
 
     void OnEnemyDied(DummyEnemy _)
