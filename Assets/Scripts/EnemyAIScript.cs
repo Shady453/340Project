@@ -43,6 +43,13 @@ public class EnemyAIScript : MonoBehaviour
 
     private void Update()
     {
+        if (!RoundSystem.IsGameActive)
+        {
+            if (agent != null)
+                agent.isStopped = true;
+            return;
+        }
+
         if (target == null || agent == null || !agent.isOnNavMesh)
             return;
 

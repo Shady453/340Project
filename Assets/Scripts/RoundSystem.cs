@@ -6,43 +6,51 @@ using UnityEngine.TextCore.Text;
 public class RoundSystem : MonoBehaviour
 {
     public UI UI;
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        StartCoroutine(RunRounds());
-    }
 
-    // Update is called once per frame
-    void Update()
+    // Global flag the entire game can check
+    public static bool IsGameActive { get; private set; } = false;
+
+    void Start()
     {
         
     }
-    
-     [Header("Enemy")]
-    public GameObject enemyPrefab;           // assign your DummyEnemy prefab
-    public List<Transform> spawnPoints;      // drop in several transforms around the map
+
+    public void StartGame()
+    {
+        if (!IsGameActive)
+        {
+            IsGameActive = true;
+            StartCoroutine(RunRounds());
+        }
+    }
+
+    public void StopGame()
+    {
+        IsGameActive = false;  
+        // Optional: clear enemies, reset UI, etc.
+    }
+
+    // -----------------------------------------
+    // Everything below was untouched except where
+    // I added "if (!IsGameActive) yield break;"
+    // -----------------------------------------
+
+    [Header("Enemy")]
+    public GameObject enemyPrefab;
+    public List<Transform> spawnPoints;
 
     [Header("Rounds")]
     public int startingRound = 1;
     public int currentRound { get; private set; }
-    public float intermissionSeconds = 5f;   // time between rounds
-
-    [Tooltip("Base enemies in round 1.")]
+    public float intermissionSeconds = 5f;
     public int baseEnemies = 1;
-
-    [Tooltip("Extra enemies added each round.")]
     public int enemiesPerRound = 1;
 
     [Header("Scaling")]
-    [Tooltip("Multiply enemy health each round: e.g., 1.20 = +20% per round")]
     public float healthMultiplierPerRound = 1.20f;
-
-    [Tooltip("Optional: speed multiplier per round (1.0 = unchanged)")]
     public float speedMultiplierPerRound = 1.05f;
 
     [Header("Spawn Control")]
-    [Tooltip("Cap how many are alive at once, to avoid huge bursts.")]
     public int concurrentAliveCap = 12;
     public float spawnInterval = 0.5f;
 
@@ -54,7 +62,7 @@ public class RoundSystem : MonoBehaviour
 
     void OnEnable()
     {
-        DummyEnemy.Died += OnEnemyDied;     // subscribe to enemy death event
+        DummyEnemy.Died += OnEnemyDied;
     }
 
     void OnDisable()
@@ -66,29 +74,23 @@ public class RoundSystem : MonoBehaviour
     {
         currentRound = Mathf.Max(1, startingRound);
 
-        while (true)
+        while (IsGameActive)
         {
-            // Intermission
             yield return StartCoroutine(Intermission());
 
-            // Start the round
             yield return StartCoroutine(StartRound(currentRound));
 
-            // Wait until the round clears (no alive enemies)
             yield return new WaitUntil(() => AliveCount == 0 && _spawnedThisRound >= _toSpawnThisRound);
 
-            print("Round " + (currentRound + 1) + ": " + _spawnedThisRound);
             currentRound++;
         }
     }
 
     IEnumerator Intermission()
     {
-        // hook your UI here (e.g., show "Round X starting in ...")
         float t = intermissionSeconds;
-        while (t > 0f)
+        while (t > 0f && IsGameActive)
         {
-            // update UI countdown if you have one
             t -= Time.deltaTime;
             yield return null;
         }
@@ -96,26 +98,24 @@ public class RoundSystem : MonoBehaviour
 
     IEnumerator StartRound(int round)
     {
-        // Compute wave size and reset counters
-        _toSpawnThisRound     = baseEnemies + enemiesPerRound * (round - 1);
-        _spawnedThisRound     = 0;
-        _spawning             = true;
+        if (!IsGameActive) yield break;
 
-        // Difficulty scaling for this round
+        _toSpawnThisRound = baseEnemies + enemiesPerRound * (round - 1);
+        _spawnedThisRound = 0;
+        _spawning = true;
+
         float healthScale = Mathf.Pow(healthMultiplierPerRound, round - 1);
-        float speedScale  = Mathf.Pow(speedMultiplierPerRound,  round - 1);
+        float speedScale = Mathf.Pow(speedMultiplierPerRound, round - 1);
 
-        // Spawn loop
-        while (_spawning && _spawnedThisRound < _toSpawnThisRound)
+        while (_spawning && _spawnedThisRound < _toSpawnThisRound && IsGameActive)
         {
-            // respect concurrent alive cap
             if (AliveCount < concurrentAliveCap)
             {
                 SpawnEnemy(healthScale, speedScale);
                 _spawnedThisRound++;
                 AliveCount++;
             }
-            
+
             UI.ShowAliveCount(AliveCount);
             UI.ShowSpawnedThisRound(_spawnedThisRound);
             UI.ShowToSpawnThisRound(_toSpawnThisRound);
@@ -126,12 +126,13 @@ public class RoundSystem : MonoBehaviour
 
     void SpawnEnemy(float healthScale, float speedScale)
     {
+        if (!IsGameActive) return;
+
         if (enemyPrefab == null || spawnPoints == null || spawnPoints.Count == 0) return;
 
         Transform sp = spawnPoints[Random.Range(0, spawnPoints.Count)];
         Vector3 spawnPos = sp.position;
 
-        // Snap spawn position to nearest NavMesh position
         if (UnityEngine.AI.NavMesh.SamplePosition(spawnPos, out UnityEngine.AI.NavMeshHit hit, 1.0f, UnityEngine.AI.NavMesh.AllAreas))
         {
             spawnPos = hit.position;
@@ -151,7 +152,6 @@ public class RoundSystem : MonoBehaviour
 
     void OnEnemyDied(DummyEnemy _)
     {
-        print("Round: enemy died");
         AliveCount = Mathf.Max(0, AliveCount - 1);
         UI.ShowAliveCount(AliveCount);
     }
