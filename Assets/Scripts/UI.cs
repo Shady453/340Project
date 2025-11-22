@@ -16,6 +16,7 @@ public class UI : MonoBehaviour
     public TMP_Text AliveCount;
     public TMP_Text SpawnedThisRound;
     public TMP_Text ToSpawnThisRound;
+    public TMP_Text RoundText;  
     
     private List<CanvasGroup> canvasGroups;
 
@@ -33,6 +34,12 @@ public class UI : MonoBehaviour
     {
         ToSpawnThisRound.text = value.ToString();
     }
+    public void ShowRound(int round)
+    {
+        if (RoundText != null)
+            RoundText.text = round.ToString();
+    }
+
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

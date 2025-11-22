@@ -27,13 +27,10 @@ public class RoundSystem : MonoBehaviour
     public void StopGame()
     {
         IsGameActive = false;  
-        // Optional: clear enemies, reset UI, etc.
+        
     }
 
-    // -----------------------------------------
-    // Everything below was untouched except where
-    // I added "if (!IsGameActive) yield break;"
-    // -----------------------------------------
+    
 
     [Header("Enemy")]
     public GameObject enemyPrefab;
@@ -74,17 +71,30 @@ public class RoundSystem : MonoBehaviour
     {
         currentRound = Mathf.Max(1, startingRound);
 
+        // Show round 1 as soon as the game starts
+        if (UI != null)
+            UI.ShowRound(currentRound);
+
         while (IsGameActive)
         {
+            // Intermission before the round (you can keep or shorten this)
             yield return StartCoroutine(Intermission());
 
+            // Start the round
             yield return StartCoroutine(StartRound(currentRound));
 
+            // Wait until all enemies for this round are dead
             yield return new WaitUntil(() => AliveCount == 0 && _spawnedThisRound >= _toSpawnThisRound);
 
+            // Go to next round
             currentRound++;
+
+            // Update the round text for the next round
+            if (UI != null)
+                UI.ShowRound(currentRound);
         }
     }
+
 
     IEnumerator Intermission()
     {
